@@ -38,16 +38,25 @@ generateUniqueID.last=1;
         get FRAME_RATE() {
             return _fps;
         },
+
+        events : {}, //Maps event names to callbacks
+
+        /*
+         * Currently only maps 1 callback to each event
+         */
+        addEvent : 
+            function(type, callback){
+                if (type != "keydown" && type != "mousedown") return; //Add more later
+                events[type] = callback;
+            },
         update : 
             function(json) { 
                 var obj = JSON.parse(json);
                 
                 //sample obj : { ID : 5507, mousedown : true, 65 : true }
                 
-                updatesWaiting[obj.ID] = obj;
-                delete updatesWaiting[obj.ID]["ID"];
-
-                Multi.client.send(JSON.stringify({"Message received":"yes"}));
+                Multi.updatesWaiting[obj.ID] = obj;
+                delete Multi.updatesWaiting[obj.ID]["ID"];
             },
             
         receive : 
@@ -71,7 +80,16 @@ generateUniqueID.last=1;
                     Multi.update(json);
                 }
                 
-            }
+            },
+
+        timeStep : 
+            function(){
+                if (Multi.debug){ 
+                    if (Multi.updatesWaiting != {})
+                        console.log(Multi.updatesWaiting);
+                }
+                Multi.updatesWaiting = {};
+            },
 
     }
     //self.Multi = Multi;
@@ -89,6 +107,7 @@ io.on('connection', function(client){
 	});
 });
 
+setInterval(Multi.timeStep, 50);
 
 
 console.log('Listening on http://0.0.0.0:' + port );
