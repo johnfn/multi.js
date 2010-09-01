@@ -17,6 +17,29 @@ server.configure(function(){
 
 server.listen(port);
 
+/*
+ * Sample logic for a game
+ *
+ * TODO the best way to handle this is through listeners.
+ */
+var GameLogic = {
+    publicObjects : [],
+    addPlayer :
+        function(ID){
+            GameLogic.publicObjects.push({
+                x  : 25,
+                y  : 25,
+                ID : ID,
+            });
+        
+        },
+    nextStep : 
+        function(json){
+            if (JSON.stringify(json) != '{}'){
+                console.log("inlogic : " + JSON.stringify(json));
+            }
+        },
+};
 
 function generateUniqueID(){
     return generateUniqueID.last++;
@@ -29,7 +52,9 @@ generateUniqueID.last=1;
     var Multi = {
         objects : [],
         updatesWaiting : [],
+        Logic : undefined,
         client : undefined,
+
         FRAME_INTERVAL : 1000 / _fps,
         set FRAME_RATE(fps) {
             Multi.FRAME_INTERVAL = Math.floor(1000 / fps);
@@ -49,6 +74,10 @@ generateUniqueID.last=1;
                 if (type != "keydown" && type != "mousedown") return; //Add more later
                 events[type] = callback;
             },
+        /*
+         * Instantly have the logic part register the update, but don't output it to users yet.
+         */
+
         update : 
             function(json) { 
                 var obj = JSON.parse(json);
@@ -61,8 +90,6 @@ generateUniqueID.last=1;
             
         receive : 
             function(json){
-                console.log(json);
-
                 var obj = JSON.parse(json);
                 
                 if (obj.type == "initialize"){
@@ -72,6 +99,8 @@ generateUniqueID.last=1;
                         isInitializeResponse : true
                     };
                     Multi.client.send(JSON.stringify(response));
+
+                    Multi.Logic.addPlayer(response.ID);
                     
                     //also send the full current state of the game
                 }
@@ -83,18 +112,26 @@ generateUniqueID.last=1;
             },
 
         timeStep : 
-            function(){
+            function() {
                 if (Multi.debug){ 
-                    if (Multi.updatesWaiting != {})
-                        console.log(Multi.updatesWaiting);
+                    //if (Multi.updatesWaiting != {})
+                    //    console.log(Multi.updatesWaiting);
                 }
+                Multi.Logic.nextStep(Multi.updatesWaiting);
                 Multi.updatesWaiting = {};
+            },
+        
+        initialize : 
+            function(Logic){
+                Multi.Logic = Logic;
             },
 
     }
     //self.Multi = Multi;
 //})(this);
 
+
+Multi.initialize(GameLogic);
 
 //Setup Socket.IO
 var io = io.listen(server);

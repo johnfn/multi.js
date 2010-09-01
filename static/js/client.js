@@ -18,8 +18,8 @@ var MultiClient = {
     socket  : undefined,
     receive : 
         function(json) { 
-            if (debug){
-                console.log("JSON received: " + json);
+            if (MultiClient.debug){
+                //console.log("JSON received: " + json);
             }
             /* go through every object that we know about and update it */
         },
@@ -50,9 +50,6 @@ var MultiClient = {
                 function(json){
                     var receivedObj = JSON.parse(json);
 
-                    if (debug){
-                        console.log("JSON received: " + json);
-                    }
                     
                     if (!receivedObj.isInitializeResponse) return false; //discard any updates
                     
@@ -73,6 +70,7 @@ var MultiClient = {
                         {
                             ID   : MultiClient.ID,
                             keys : e.which,
+                            type : "update",
                         }
                 )); 
             });
