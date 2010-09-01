@@ -23,20 +23,28 @@ server.listen(port);
  * TODO the best way to handle this is through listeners.
  */
 var GameLogic = {
-    publicObjects : [],
+    /*
+     * Should be stored in Multi, not here.
+     */
+    oldState      : {},
+    publicObjects : {},
     addPlayer :
         function(ID){
-            GameLogic.publicObjects.push({
+            if (ID in GameLogic.publicObjects){
+                console.log("MASSIVE ERROR: non-unique ID");
+            }
+            GameLogic.publicObjects[ID] = {
                 x  : 25,
                 y  : 25,
                 ID : ID,
-            });
+            }; 
         
         },
     nextStep : 
         function(json){
-            if (JSON.stringify(json) != '{}'){
-                console.log("inlogic : " + JSON.stringify(json));
+            if (JSON.stringify(json) == '{}') return;
+            for (ID in json){
+                GameLogic.publicObjects[ID].x++;
             }
         },
 };
@@ -111,6 +119,38 @@ generateUniqueID.last=1;
                 
             },
 
+        /*
+         * Gets a diff in the objects in Logic.publicObjects to send over to the server
+         */
+        getDiff :
+            function(){
+                var diff = {};
+                console.log("oldstate : " + JSON.stringify(Multi.Logic.oldState));
+                for (ID in Multi.Logic.publicObjects){
+                    var thisObj = Multi.Logic.publicObjects[ID];
+
+                    if (! (ID in Multi.Logic.oldState)){
+                        //This object was newly created, add it.
+                        diff[ID] = thisObj;
+                    } else {
+                        for (key in thisObj){
+                            if (Multi.Logic.oldState[ID][key] == thisObj[key]) 
+                                continue;
+                            //this object has been updated; add it to the diff
+                            if (!diff[ID]) diff[ID] = {};
+                            diff[ID][key] = thisObj[key];
+                        }
+                    }
+                }
+                
+                //Copy over entire gamestate to oldstate via JQuery clone
+                //
+                //TODO; this isn't a very efficient way of copying an object.
+                Multi.Logic.oldState = JSON.parse(JSON.stringify(Multi.Logic.publicObjects));
+
+                return diff;
+            },
+
         timeStep : 
             function() {
                 if (Multi.debug){ 
@@ -118,6 +158,7 @@ generateUniqueID.last=1;
                     //    console.log(Multi.updatesWaiting);
                 }
                 Multi.Logic.nextStep(Multi.updatesWaiting);
+                console.log(Multi.getDiff());
                 Multi.updatesWaiting = {};
             },
         
