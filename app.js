@@ -21,7 +21,7 @@ server.listen(port);
 function generateUniqueID(){
     return generateUniqueID.last++;
 }
-generateUniqueID.last=0;
+generateUniqueID.last=1;
 
 //(function(self) {
     var _fps = 20; // default FPS is 20.
@@ -46,6 +46,8 @@ generateUniqueID.last=0;
                 
                 updatesWaiting[obj.ID] = obj;
                 delete updatesWaiting[obj.ID]["ID"];
+
+                Multi.client.send(JSON.stringify({"Message received":"yes"}));
             },
             
         receive : 
