@@ -4,6 +4,7 @@ var connect = require('connect')
     , express = require('express')
     , sys = require('sys')
     , io = require('Socket.IO-node')
+    , Multi = require('./lib/multi')
     , port = 8081;
 
 //Setup Express
