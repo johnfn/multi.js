@@ -16,35 +16,6 @@ server.configure(function(){
 });
 
 server.listen(port);
-
-/*
- * Sample logic for a game
- *
- * TODO the best way to handle this is through listeners.
- */
-var GameLogic = {
-    /*
-     * We make a promise to always call newPlayer when a new player joins the game.
-     */
-    player : {},
-    newPlayer :
-        function(){
-            GameLogic.player = {
-                x  : 25,
-                y  : 25,
-            }; 
-
-            Multi.addObject(GameLogic.player);
-        },
-    nextStep : 
-        function(json){
-            if (JSON.stringify(json) == '{}') return;
-
-            GameLogic.player.x++;
-        },
-};
-
-
 //(function(self) {
     var _fps = 20; // default FPS is 20.
     
@@ -68,7 +39,7 @@ var GameLogic = {
         generateUniqueID : 
             function(){
                 if (!Multi.generateUniqueID.last) Multi.generateUniqueID.last = 0;
-                return Multi.generateUniqueID.last++;
+                return ++Multi.generateUniqueID.last;
             },
         //generateUniqueID.last=1;
 
@@ -78,19 +49,24 @@ var GameLogic = {
          */
         addEvent : 
             function(type, callback){
-                if (type != "keydown" && type != "mousedown") return; //Add more later
-                events[type] = callback;
+                //if (type != "keydown" && type != "mousedown") return; //Add more later
+                Multi.events[type] = callback;
             },
         /*
          * Instantly have the logic part register the update, but don't output it to users yet.
          */
 
+        fireEvent :
+            function(type, args){
+                if (Multi.events[type]){
+                    Multi.events[type].apply(undefined, args);
+                }
+            },
 
         /*
          * Alright, this is tricky. We store a reference to the object (since that is how 
          * JS operates anyways). Whenever our user updates the object, we become aware of 
          * this since we check our reference against the oldState.
-         *
          */
         addObject : 
             function(obj){
@@ -101,6 +77,9 @@ var GameLogic = {
                 obj.ID = Multi.generateUniqueID();
                 Multi.curState[obj.ID] = obj;
             },
+        /*
+         * Called whenever a client sends some input. Json - representation of that input.
+         */
         update : 
             function(json) { 
                 var obj = JSON.parse(json);
@@ -110,7 +89,9 @@ var GameLogic = {
                 Multi.updatesWaiting[obj.ID] = obj;
                 delete Multi.updatesWaiting[obj.ID]["ID"];
             },
-            
+        /*
+         * Called when the client sends anything to the server.
+         */
         receive : 
             function(json){
                 var obj = JSON.parse(json);
@@ -123,7 +104,7 @@ var GameLogic = {
                     };
                     Multi.client.send(JSON.stringify(response));
 
-                    Multi.Logic.newPlayer();
+                    Multi.fireEvent("init");
                     
                     //also send the full current state of the game
                 }
@@ -135,7 +116,7 @@ var GameLogic = {
             },
 
         /*
-         * Gets a diff in the objects in curState to send over to the server
+         * Gets a diff in the objects in curState.
          */
         getDiff :
             function(){
@@ -166,13 +147,19 @@ var GameLogic = {
                 return diff;
             },
 
+        /*
+         * Alerts the Logic object that another x ms has passed, and it should update
+         * all of it's objects. Then we figure out what was changed and send it to the
+         * clients.
+         */
         timeStep : 
             function() {
                 if (Multi.debug){ 
                     //if (Multi.updatesWaiting != {})
                     //    console.log(Multi.updatesWaiting);
                 }
-                Multi.Logic.nextStep(Multi.updatesWaiting);
+                Multi.fireEvent("step", [Multi.updatesWaiting]);
+                //Multi.Logic.nextStep(Multi.updatesWaiting);
                 console.log(Multi.getDiff());
                 Multi.updatesWaiting = {};
             },
@@ -185,6 +172,45 @@ var GameLogic = {
     }
     //self.Multi = Multi;
 //})(this);
+
+
+
+/*
+ * Sample logic for a game
+ *
+ * TODO the best way to handle this is through listeners.
+ */
+var GameLogic = {
+    /*
+     * We make a promise to always call newPlayer when a new player joins the game.
+     */
+    player : {},
+    newPlayer :
+        function(){
+            GameLogic.player = {
+                x  : 25,
+                y  : 25,
+            }; 
+
+            Multi.addObject(GameLogic.player);
+        },
+    nextStep : 
+        function(json){
+            console.log("In nextStep");
+            console.log(json);
+            if (JSON.stringify(json) == '{}') return;
+
+            GameLogic.player.x++;
+        },
+    initHandlers :
+        function(){
+            Multi.addEvent("init", GameLogic.newPlayer);
+            Multi.addEvent("step", GameLogic.nextStep);
+        }
+};
+
+GameLogic.initHandlers();
+
 
 
 Multi.initialize(GameLogic);
