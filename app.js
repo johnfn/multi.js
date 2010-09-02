@@ -24,35 +24,26 @@ server.listen(port);
  */
 var GameLogic = {
     /*
-     * Should be stored in Multi, not here.
+     * We make a promise to always call newPlayer when a new player joins the game.
      */
-    oldState      : {},
-    publicObjects : {},
-    addPlayer :
-        function(ID){
-            if (ID in GameLogic.publicObjects){
-                console.log("MASSIVE ERROR: non-unique ID");
-            }
-            GameLogic.publicObjects[ID] = {
+    player : {},
+    newPlayer :
+        function(){
+            GameLogic.player = {
                 x  : 25,
                 y  : 25,
-                ID : ID,
             }; 
-        
+
+            Multi.addObject(GameLogic.player);
         },
     nextStep : 
         function(json){
             if (JSON.stringify(json) == '{}') return;
-            for (ID in json){
-                GameLogic.publicObjects[ID].x++;
-            }
+
+            GameLogic.player.x++;
         },
 };
 
-function generateUniqueID(){
-    return generateUniqueID.last++;
-}
-generateUniqueID.last=1;
 
 //(function(self) {
     var _fps = 20; // default FPS is 20.
@@ -62,6 +53,8 @@ generateUniqueID.last=1;
         updatesWaiting : [],
         Logic : undefined,
         client : undefined,
+        oldState      : {},
+        curState : {},
 
         FRAME_INTERVAL : 1000 / _fps,
         set FRAME_RATE(fps) {
@@ -72,8 +65,14 @@ generateUniqueID.last=1;
             return _fps;
         },
 
-        events : {}, //Maps event names to callbacks
+        generateUniqueID : 
+            function(){
+                if (!Multi.generateUniqueID.last) Multi.generateUniqueID.last = 0;
+                return Multi.generateUniqueID.last++;
+            },
+        //generateUniqueID.last=1;
 
+        events : {}, //Maps event names to callbacks
         /*
          * Currently only maps 1 callback to each event
          */
@@ -86,6 +85,22 @@ generateUniqueID.last=1;
          * Instantly have the logic part register the update, but don't output it to users yet.
          */
 
+
+        /*
+         * Alright, this is tricky. We store a reference to the object (since that is how 
+         * JS operates anyways). Whenever our user updates the object, we become aware of 
+         * this since we check our reference against the oldState.
+         *
+         */
+        addObject : 
+            function(obj){
+                //TODO to mitigate this error, we should use something like ___ID
+                if (obj.ID){
+                    console.log("The passed in object has an ID value, which is bad news.");
+                }
+                obj.ID = Multi.generateUniqueID();
+                Multi.curState[obj.ID] = obj;
+            },
         update : 
             function(json) { 
                 var obj = JSON.parse(json);
@@ -103,12 +118,12 @@ generateUniqueID.last=1;
                 if (obj.type == "initialize"){
                     //instantly respond to any initialization requests
                     var response = {
-                        ID                   : generateUniqueID(), 
+                        ID                   : Multi.generateUniqueID(), 
                         isInitializeResponse : true
                     };
                     Multi.client.send(JSON.stringify(response));
 
-                    Multi.Logic.addPlayer(response.ID);
+                    Multi.Logic.newPlayer();
                     
                     //also send the full current state of the game
                 }
@@ -120,21 +135,21 @@ generateUniqueID.last=1;
             },
 
         /*
-         * Gets a diff in the objects in Logic.publicObjects to send over to the server
+         * Gets a diff in the objects in curState to send over to the server
          */
         getDiff :
             function(){
                 var diff = {};
-                console.log("oldstate : " + JSON.stringify(Multi.Logic.oldState));
-                for (ID in Multi.Logic.publicObjects){
-                    var thisObj = Multi.Logic.publicObjects[ID];
+                console.log("oldstate : " + JSON.stringify(Multi.oldState));
+                for (ID in Multi.curState){
+                    var thisObj = Multi.curState[ID];
 
-                    if (! (ID in Multi.Logic.oldState)){
+                    if (! (ID in Multi.oldState)){
                         //This object was newly created, add it.
                         diff[ID] = thisObj;
                     } else {
                         for (key in thisObj){
-                            if (Multi.Logic.oldState[ID][key] == thisObj[key]) 
+                            if (Multi.oldState[ID][key] == thisObj[key]) 
                                 continue;
                             //this object has been updated; add it to the diff
                             if (!diff[ID]) diff[ID] = {};
@@ -146,7 +161,7 @@ generateUniqueID.last=1;
                 //Copy over entire gamestate to oldstate via JQuery clone
                 //
                 //TODO; this isn't a very efficient way of copying an object.
-                Multi.Logic.oldState = JSON.parse(JSON.stringify(Multi.Logic.publicObjects));
+                Multi.oldState = JSON.parse(JSON.stringify(Multi.curState));
 
                 return diff;
             },
