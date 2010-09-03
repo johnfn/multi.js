@@ -8,19 +8,23 @@ Like most multiplayer apps, there are two sides to this one: the server and the 
 
 h3. server
 
+The Multi object on the server has two public functions.
+
+h4. @init@
+
 To get the multi.js server up and running:
 
 @Multi.init(server)@
 
 where @server@ is the server object running in node.js.
 
+h4. @addEvent@
 
+The server is where you code the core game logic. multi.js sends out events when it thinks that something important has happened. There are only two!
 
-The server is where you code the core game logic. multi.js sends out events when it thinks that something important has happened. So far, there are only two.
+* @newuser@ - Triggered when a new user connects.
 
-@newuser@ - Triggered when a new user connects.
-
-@input@ - Triggered when a user sends input - either a keydown, or a mousedown event.
+* @input@ - Triggered when a user sends input - either a keydown or mousedown event.
 
 You can wire up event handlers like so:
 
