@@ -1,0 +1,9 @@
+[submodule "lib/express"]
+	path = lib/express
+	url = git://github.com/visionmedia/express.git
+[submodule "lib/socket.io-node"]
+	path = lib/socket.io-node
+	url = git://github.com/LearnBoost/Socket.IO-node.git
+[submodule "lib/socket.io"]
+	path = lib/socket.io
+	url = git://github.com/LearnBoost/Socket.IO.git

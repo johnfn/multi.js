@@ -1,5 +1,5 @@
-//setup Dependencies
-require(__dirname + "/../lib/setup").ext( __dirname + "/../lib").ext( __dirname + "/../lib/express/support");
+// setup dependencies
+require.paths.unshift(__dirname + "/lib", __dirname + "/lib/express/support");
 var connect = require('connect')
     , express = require('express')
     , sys = require('sys')
