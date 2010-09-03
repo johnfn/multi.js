@@ -26,24 +26,32 @@ server.listen(port);
 var GameLogic = {
     /*
      * We make a promise to always call newPlayer when a new player joins the game.
+     *
+     *
      */
-    player : {},
+    players : [],
     newPlayer :
-        function(){
-            GameLogic.player = {
+        function(ID){
+            var p = {
                 x  : 25,
                 y  : 25,
             }; 
 
-            Multi.addObject(GameLogic.player);
+            GameLogic.players[ID] = p;
+
+            Multi.addObject(p);
         },
+    /*
+     * json passed in is a representation of what keys have been pressed.
+     */
     nextStep : 
         function(json){
             console.log("In nextStep");
             console.log(json);
-            if (JSON.stringify(json) == '{}') return;
-
-            GameLogic.player.x++;
+            if (JSON.stringify(json) == '{}' || JSON.stringify(json) == '[]') return;
+            for (ID in json){
+                GameLogic.players[ID].x++;
+            }
         },
     initHandlers :
         function(){
@@ -55,20 +63,17 @@ var GameLogic = {
 GameLogic.initHandlers();
 
 
-
-Multi.initialize(GameLogic);
-
 //Setup Socket.IO
 var io = io.listen(server);
 io.on('connection', function(client){
 	console.log('Client Connected');
-    Multi.client=client;
 	client.on('message', Multi.receive);
 	client.on('disconnect', function(){
 		console.log('Client Disconnected.');
 	});
 });
 
+Multi.client=io;
 setInterval(Multi.timeStep, 50);
 
 

@@ -13,15 +13,27 @@ var curPlayer= {
     w : 15,
 };
 var MultiClient = {
-    debug   : true,
-    ID      : -1,
-    socket  : undefined,
+    debug    : true,
+    ID       : -1,
+    initFunc : undefined,
+    socket   : undefined,
+    objects : {},
     receive : 
         function(json) { 
             if (MultiClient.debug){
-                //console.log("JSON received: " + json);
+                console.log("JSON received: " + json);
             }
-            /* go through every object that we know about and update it */
+            json = JSON.parse(json);
+
+            //Update every object that we have a diff on.
+            for (var oID in json){
+                if (! (oID in MultiClient.objects)){
+                    MultiClient.objects[oID] = {};
+                }
+                for (var key in json[oID]){
+                    MultiClient.objects[oID][key] = json[oID][key];
+                }
+            }
         },
 
     /*
@@ -47,17 +59,23 @@ var MultiClient = {
             
             //A special 1 time function to obtain a unique ID from the server.
             MultiClient.socket.addEvent('message', 
-                function(json){
+                MultiClient.initFunc = function(json){
+                    console.log(json);
                     var receivedObj = JSON.parse(json);
 
                     
                     if (!receivedObj.isInitializeResponse) return false; //discard any updates
+
+                    //Add all created objects to Client.objects
+                    for (var oID in receivedObj["state"]){
+                        MultiClient.objects[oID] = receivedObj["state"][oID];
+                    }
                     
                     MultiClient.ID = receivedObj.ID;
                     
                     //destroy this function; set the default one instead
-                    MultiClient.socket.removeEvent('message', this);
-                    MultiClient.socket.addEvent('message', this.receive);
+                    MultiClient.socket.removeEvent('message', MultiClient.initFunc);
+                    MultiClient.socket.addEvent('message', MultiClient.receive);
                 });
 
 
@@ -86,8 +104,12 @@ $(document).ready(function() {
     globals.context = globals.canv.getContext('2d');
 
     setInterval(function(){
+        globals.context.clearRect(0,0,500,500);
         globals.context.fillStyle = "5555ff";
-        globals.context.fillRect(curPlayer.x, curPlayer.y, curPlayer.w, curPlayer.w);
+        for (var oID in MultiClient.objects){
+            var obj = MultiClient.objects[oID];
+            globals.context.fillRect(obj.x, obj.y, 10, 10);
+        }
        
     }, 50);
 
