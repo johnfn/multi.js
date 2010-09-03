@@ -28,12 +28,9 @@ Arguments: ID, a unique ID tied to the user that just joined.
 
 Sample use:
 
-bc..
-
-function newUserEvent(ID){
+bc. function newUserEvent(ID){
     console.log("A new user has joined, with ID " + ID);
 }
-
 Multi.addEvent("newuser", newUserEvent);
 
 
@@ -43,13 +40,10 @@ Arguments: input, an object representing which keys or buttons have been pressed
 
 Sample use:
 
-bc..
-
-function inputEvent(input){
+bc. function inputEvent(input){
     console.log("A user has made some sort of input.")
     console.log(input);
 }
-
 Multi.addEvent("input", inputEvent);
 
 h3. client
