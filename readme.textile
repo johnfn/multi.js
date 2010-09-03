@@ -6,11 +6,11 @@ h2. the big idea
 
 Like most multiplayer apps, there are two sides to this one: the server and the client. multi.js takes care of synchronization between client and server, so you can work on logic.
 
-h3. server
+h2. server
 
 The Multi object on the server has two public functions.
 
-h4. init
+h3. init
 
 To get the multi.js server up and running:
 
@@ -18,7 +18,7 @@ To get the multi.js server up and running:
 
 where @server@ is the server object running in node.js.
 
-h4. addEvent
+h3. addEvent
 
 The server is where you code the core game logic. multi.js sends out events when it thinks that something important has happened. There are only two events!
 
@@ -46,6 +46,41 @@ bc. function inputEvent(input){
 }
 Multi.addEvent("input", inputEvent);
 
-h3. client
+h3. addObject
+
+If you are going to create a new object in the game world, send it through here. Then, whenever you update it elsewhere in the code, multi.js will know, and it will pass over any differences to the client.
+
+*Warning*: Don't @addObject(o)@ and then do something like @o = randomNewObject;@. multi.js can't handle new assignments to objects. If you must do this, destroy the old one, and then add the new one.
+
+After the object is created, an ID will be added to its list of properties. 
+
+Sample use:
+
+bc.   Multi.addObject({
+          x  : 25,
+          y  : 25,
+      }); 
+
+
+h2. client
 
 On the client side, most of the work is done for you.
+
+All that you need to do is call MultiClient.initialize with a function that should be fired repeatedly.
+
+MultiClient will pass back a list of all objects, so that you can update their position and status clientside.
+
+bc. MultiClient.init(function(objects){
+        globals.context.clearRect(0,0,500,500);
+        globals.context.fillStyle = "5555ff";
+        for (var oID in objects){
+            var obj = objects[oID];
+            globals.context.fillRect(obj.x, obj.y, 10, 10);
+        }
+    });
+
+h2. what remains
+
+* Abstract all the IDs away from the end user.
+* Break up input event into mouse and keyboard events.
+* A way to destroy objects serverside.
