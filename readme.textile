@@ -28,12 +28,13 @@ Arguments: ID, a unique ID tied to the user that just joined.
 
 Sample use:
 
-@function newUserEvent(ID){
+bc.
+function newUserEvent(ID){
     console.log("A new user has joined, with ID " + ID);
 }
 
-Multi.addEvent("newuser", newUserEvent);@
-
+Multi.addEvent("newuser", newUserEvent);
+p.
 
 * @input@ - Triggered when a user sends input - either a keydown or mousedown event.
 
