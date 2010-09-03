@@ -1,0 +1,32 @@
+h1. multi.js
+
+A framework to make coding multiplayer JS games with "node":http://nodejs.org/ easier.
+
+h2. the big idea
+
+Like most multiplayer apps, there are two sides to this one: the server and the client. multi.js takes care of synchronization between client and server, so you can work on logic.
+
+h3. server
+
+To get the multi.js server up and running:
+
+@Multi.init(server)@
+
+where @server@ is the server object running in node.js.
+
+
+
+The server is where you code the core game logic. multi.js sends out events when it thinks that something important has happened. So far, there are only two.
+
+@newuser@ - Triggered when a new user connects.
+
+@input@ - Triggered when a user sends input - either a keydown, or a mousedown event.
+
+You can wire up event handlers like so:
+
+@Multi.addEvent("newuser", newUserHandler);
+
+
+h3. client
+
+On the client side, most of the work is done for you.
