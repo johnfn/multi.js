@@ -3,7 +3,7 @@ require(__dirname + "/../lib/setup").ext( __dirname + "/../lib").ext( __dirname 
 var connect = require('connect')
     , express = require('express')
     , sys = require('sys')
-    , io = require('Socket.IO-node')
+    //, 
     , Multi = require('./lib/multi').Multi
     , port = 8081;
 
@@ -27,10 +27,9 @@ var GameLogic = {
     /*
      * We make a promise to always call newPlayer when a new player joins the game.
      *
-     *
      */
     players : [],
-    newPlayer :
+    newUser :
         function(ID){
             var p = {
                 x  : 25,
@@ -43,38 +42,21 @@ var GameLogic = {
         },
     /*
      * json passed in is a representation of what keys have been pressed.
+     *
+     * IDs of the player who pressed it are paired with which keys are pressed.
      */
-    nextStep : 
+    inputEvent : 
         function(json){
-            console.log("In nextStep");
-            console.log(json);
-            if (JSON.stringify(json) == '{}' || JSON.stringify(json) == '[]') return;
             for (ID in json){
                 GameLogic.players[ID].x++;
             }
         },
-    initHandlers :
-        function(){
-            Multi.addEvent("init", GameLogic.newPlayer);
-            Multi.addEvent("step", GameLogic.nextStep);
-        }
 };
 
-GameLogic.initHandlers();
+Multi.addEvent("newuser", GameLogic.newUser);
+Multi.addEvent("input", GameLogic.inputEvent);
 
-
-//Setup Socket.IO
-var io = io.listen(server);
-io.on('connection', function(client){
-	console.log('Client Connected');
-	client.on('message', Multi.receive);
-	client.on('disconnect', function(){
-		console.log('Client Disconnected.');
-	});
-});
-
-Multi.client=io;
-setInterval(Multi.timeStep, 50);
+Multi.init(server);
 
 
 console.log('Listening on http://0.0.0.0:' + port );
