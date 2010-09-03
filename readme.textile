@@ -4,7 +4,7 @@ A framework to make coding multiplayer JS games with "node":http://nodejs.org/ e
 
 h2. the big idea
 
-Like most multiplayer apps, there are two sides to this one: the server and the client. multi.js takes care of synchronization between client and server, so you can work on logic.
+Like most multiplayer apps, there are two sides to this one: the server and the client. multi.js takes care of synchronization between client and server. What this means is that if you add or update an object serverside, multi.js ensures that the client immediately knows. 
 
 h2. server
 
