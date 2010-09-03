@@ -41,14 +41,12 @@ Arguments: input, an object representing which keys or buttons have been pressed
 
 Sample use:
 
-@function inputEvent(input){
+bc. function inputEvent(input){
     console.log("A user has made some sort of input.")
     console.log(input);
 }
 
-Multi.addEvent("input", inputEvent);@
-
-
+Multi.addEvent("input", inputEvent);
 
 h3. client
 
